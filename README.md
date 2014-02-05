@@ -2,13 +2,13 @@
 
 Using Vagrant to get up and running.
 
-1) Install Vagrant [http://www.vagrantup.com/](http://www.vagrantup.com/)
-2) Install Virtual Box [https://www.virtualbox.org/](https://www.virtualbox.org/)
+1. Install Vagrant [http://www.vagrantup.com/](http://www.vagrantup.com/)
+2. Install Virtual Box [https://www.virtualbox.org/](https://www.virtualbox.org/)
 
-In the main kafka folder
+In the main folder
 
-1) ./fetch.sh
-4) vagrant up
+1. ./fetch.sh
+2. vagrant up
 
 once this is done 
 * Zookeeper will be running 192.168.50.5
