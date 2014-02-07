@@ -1,0 +1,19 @@
+---
+- hosts: zookeeper
+  sudo: true
+  vars:
+    ubuntu_sources: no.archive.ubuntu.com
+
+  tasks:
+    - include: common.yml
+
+    - name: install zookeeper
+      apt: pkg={{ item }} state=installed
+      with_items:
+        - zookeeper
+        - zookeeperd
+      notify: restart zookeeper
+
+  handlers:
+    - name: restart zookeeper
+      service: name=zookeeper state=restarted

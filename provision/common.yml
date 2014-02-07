@@ -1,0 +1,12 @@
+---
+- command: cat /etc/apt/sources.list
+  register: sources_list
+- name: Fix apt sources list
+  command: sed -i.bak s,us.archive.ubuntu.com,{{ubuntu_sources}},g /etc/apt/sources.list
+  when: sources_list.stdout.find("us.archive.ubuntu.com") != -1
+
+- name: update apt-cache
+  apt: update-cache=yes cache_valid_time=3600
+
+- name: install Java
+  apt: pkg=openjdk-7-jdk state=installed

@@ -1,0 +1,5 @@
+[zookeeper]
+zookeeper ansible_ssh_host=127.0.0.1 ansible_ssh_port=2200
+
+[broker]
+broker1 ansible_ssh_host=127.0.0.1 ansible_ssh_port=2201

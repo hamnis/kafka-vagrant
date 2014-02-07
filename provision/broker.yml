@@ -1,0 +1,53 @@
+---
+- hosts: broker
+  sudo: true
+  vars: 
+    ubuntu_sources: no.archive.ubuntu.com
+    kafka_version: 0.8.0
+    kafka_base: kafka_2.8.0-{{kafka_version}}
+    kafka_install_dir: /opt/kafka
+
+  tasks:
+    - include: common.yml
+
+    - name: update /etc/hosts with location of zookeeper
+      lineinfile: dest=/etc/hosts regexp="zookeeper" line="192.168.50.5 zookeeper.example.com zookeeper"
+
+    - name: download kafka
+      get_url: url=http://apache.komsys.org/kafka/{{kafka_version}}/{{kafka_base}}.tar.gz dest=/tmp/{{kafka_base}}.tar.gz
+
+    - name: Create Kafka install directory
+      file: path={{kafka_install_dir}} state=directory
+      register: kafka
+
+    - name: Unpack Kafka
+      command: tar xzf /tmp/{{kafka_base}}.tar.gz -C {{kafka_install_dir}} --strip-components 1
+      when: kafka.changed
+
+    - name: Install boot script
+      copy: src=upstart/kafka.conf dest=/etc/init/kafka.conf owner=root group=root mode=0644
+
+    - name: Set server.properties
+      template: dest=/opt/kafka/config/server.properties src=config/server.properties owner=vagrant group=vagrant
+      notify: restart kafka
+
+    - name: Set log4j.properites
+      template: dest=/opt/kafka/config/log4j.properties src=config/log4j.properties owner=vagrant group=vagrant
+      notify: restart kafka
+
+    - name: Fix install directory permissions
+      file: path={{kafka_install_dir}} state=directory owner=vagrant group=vagrant recurse=yes
+
+    - name: Start kafka
+      service: name=kafka state=started
+      register: kafka_service
+
+    - name: Register topics
+      command: sh -c "{{kafka_install_dir}}/bin/kafka-create-topic.sh --zookeeper zookeeper --topic {{item}}"
+      with_items:
+        - test
+      when: kafka_service|success
+
+  handlers:
+    - name: restart kafka
+      service: name=kafka state=restarted

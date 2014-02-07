@@ -15,47 +15,35 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
-VAGRANTFILE_API_VERSION = "2"
+hosts = {
+  "zookeeper" => "192.168.50.5",
+  "broker1" => "192.168.50.10"
+}
 
 # TODO(ksweeney): RAM requirements are not empirical and can probably be significantly lowered.
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+Vagrant.configure("2") do |config|
   config.vm.box = "precise64"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
   config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-
-  config.vm.define "zookeeper" do |zookeeper|
-    zookeeper.vm.network :private_network, ip: "192.168.50.5"
-    zookeeper.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "512"]
+  
+  hosts.each do |name, ip|
+    config.vm.define name do |machine|
+      machine.vm.hostname = "%s.example.org" % name
+      machine.vm.network :private_network, ip: ip
+      machine.vm.provider "virtualbox" do |v|
+          v.name = name
+          v.customize ["modifyvm", :id, "--memory", 512]
+      end
+      machine.vm.provision "ansible" do |ansible|
+        ansible.inventory_path = "hosts"
+        ansible.extra_vars = {kafka_id: "%s" % name.gsub(/[a-zA-Z]*/, '')}
+        ansible.playbook = "provision/%s.yml" % name.gsub(/[0-9]*/, '')
+        #ansible.verbose = "vvvv"
+        ansible.sudo = true
+      end
     end
-    zookeeper.vm.provision "shell", path: "vagrant/zk.sh"
   end
-
-  config.vm.define "brokerOne" do |brokerOne|
-    brokerOne.vm.network :private_network, ip: "192.168.50.10"
-    brokerOne.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "512"]
-    end
-    brokerOne.vm.provision "shell", path: "vagrant/broker.sh", :args => "1"
-  end
-
-#  config.vm.define "brokerTwo" do |brokerTwo|
-#    brokerTwo.vm.network :private_network, ip: "192.168.50.20"
-#    brokerTwo.vm.provider :virtualbox do |vb|
-#      vb.customize ["modifyvm", :id, "--memory", "512"]
-#    end
-#    brokerTwo.vm.provision "shell", path: "vagrant/broker.sh", :args => "2"
-#  end
-
-#  config.vm.define "brokerThree" do |brokerThree|
-#    brokerThree.vm.network :private_network, ip: "192.168.50.30"
-#    brokerThree.vm.provider :virtualbox do |vb|
-#      vb.customize ["modifyvm", :id, "--memory", "512"]
-#    end
-#    brokerThree.vm.provision "shell", path: "vagrant/broker.sh", :args => "3"
-#  end  
-
 end
