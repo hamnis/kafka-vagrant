@@ -16,13 +16,16 @@
 # vi: set ft=ruby :
 
 hosts = {
-  "zookeeper" => "192.168.50.5",
-  "broker1" => "192.168.50.10"
+  "zookeeper" => "192.168.60.5",
+  "broker1" => "192.168.60.10"
 }
 
 # TODO(ksweeney): RAM requirements are not empirical and can probably be significantly lowered.
 
 Vagrant.configure("2") do |config|
+  config.hostmanager.manage_host = true
+  config.hostmanager.enabled = true
+  
   config.vm.box = "precise64"
 
   # The url from where the 'config.vm.box' box will be fetched if it
@@ -31,7 +34,7 @@ Vagrant.configure("2") do |config|
   
   hosts.each do |name, ip|
     config.vm.define name do |machine|
-      machine.vm.hostname = "%s.example.org" % name
+      machine.vm.hostname = "%s.kafka.example.org" % name
       machine.vm.network :private_network, ip: ip
       machine.vm.provider "virtualbox" do |v|
           v.name = name
